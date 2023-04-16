@@ -4,11 +4,13 @@
 
 # Run docker container docker run -d -p o:4444 --shm-size=2g selenium/standalone-chrome
 # docker-compose run https://github.com/SeleniumHQ/docker-selenium/blob/trunk/docker-compose-v3-video.yml
+from imp import load_module
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.service import Service
 import time
 from time import sleep
+
 print("Test Execution Started")
 
 
@@ -26,12 +28,8 @@ time.sleep(1)
 #navigate to browserstack.com
 ### Input url
 
-driver.get("https://www.tinkoff.ru/solutioncup/sre/")
-time.sleep(5)
-#click on the Get started for free button
-# Add file with tests
-driver.find_element(By.LINK_TEXT,"SRE").click()
-time.sleep(4)
+import testRules
+# driver.get("https://www.tinkoff.ru/solutioncup/sre/")
 #close the browser
 driver.close()
 driver.quit()

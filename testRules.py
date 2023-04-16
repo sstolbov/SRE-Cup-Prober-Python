@@ -1,0 +1,5 @@
+driver.get("https://www.tinkoff.ru/solutioncup/sre/")
+driver.get("https://www.tinkoff.ru/solutioncup/backend/")
+driver.get("https://www.tinkoff.ru/solutioncup/mobile/")
+driver.find_element(By.LINK_TEXT,"SRE").click()
+driver.find_element(By.LINK_TEXT,"backend").click()

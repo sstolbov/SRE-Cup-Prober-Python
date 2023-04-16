@@ -1,0 +1,3 @@
+    load_module( name="tests", filename="testrules.py" )
+TypeError: load_module() missing 2 required positional arguments: 'file' and 'details'
+

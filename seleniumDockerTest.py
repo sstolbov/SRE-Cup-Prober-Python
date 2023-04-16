@@ -11,64 +11,68 @@ import time
 from time import sleep
 import docker
 import os
+import sys
 import names
 
 print("Wait for selenium container")
+try:
+    client = docker.from_env()
+    network_name = names.get_first_name()
+    client.networks.create(network_name, driver="bridge")
+    networking_config = client.api.create_networking_config({
+        network_name: client.api.create_endpoint_config(
+                aliases=['selenium'],
+        links={'selenium': 'selenium', 'another': None})
+    })
+    container = client.api.create_container(
+        image="selenium/standalone-chrome",
+        healthcheck={'test': ['CMD', 'curl', '-v', 'localhost:4444/'], 'interval': 100000000},
+        networking_config=networking_config
+    )
+    client.api.start(container=container.get('Id'))
 
+    timeout = 5
+    stop_time = 3
+    elapsed_time = 0
+    while container.get('status') != 'running' and elapsed_time < timeout:
+        sleep(stop_time)
+        elapsed_time += stop_time
+        continue
 
-client = docker.from_env()
-network_name = names.get_first_name()
-client.networks.create(network_name, driver="bridge")
-networking_config = client.api.create_networking_config({
-    network_name: client.api.create_endpoint_config(
-            aliases=['selenium'],
-    links={'selenium': 'selenium', 'another': None})
-})
-container = client.api.create_container(
-    image="selenium/standalone-chrome",
-    healthcheck={'test': ['CMD', 'curl', '-v', 'localhost:4444/'], 'interval': 100000000},
-    networking_config=networking_config
-)
-client.api.start(container=container.get('Id'))
+    print("Test container starts")
+    box = client.containers.run(image = "python:alpine3.17",
+                                remove = True,
+                                volumes={os.getcwd(): {'bind': '/scripts/', 'mode': 'rw'}},
+                                working_dir='/scripts',
+                                detach = True,
+                                network=network_name,
+                                tty = True,
+                                command = "/bin/sh")
+    # send a test command
+    print("Install dependencies")
+    command_1 = "pip3 install -r requirements.txt"
+    _, stream = box.exec_run(cmd = command_1, workdir='/scripts', stream=True)
+    for data in stream:
+        print(data.decode())
+    time.sleep(1)
+    print("Test running")
+    original_stdout = sys.stdout
+    command_2 = "python3 ./runTests.py"
+    _, stream = box.exec_run(cmd = command_2, workdir='/scripts', stream=True)
+    for data in stream:
+        with open("testlogs-{}.txt".format(network_name), 'w') as f:
+            sys.stdout = f # Change the standard output to the file we created.
+            print(data.decode())
+            sys.stdout = original_stdout # Rese
 
-timeout = 5
-stop_time = 3
-elapsed_time = 0
-while container.get('status') != 'running' and elapsed_time < timeout:
-    sleep(stop_time)
-    elapsed_time += stop_time
-    continue
+    print("Test done")
+    print("Test Execution Successfully Completed!")
 
-print("Test container starts")
-box = client.containers.run(image = "python:alpine3.17",
-                            remove = True,
-                            volumes={os.getcwd(): {'bind': '/scripts/', 'mode': 'rw'}},
-                            working_dir='/scripts',
-                            detach = True,
-                            network=network_name,
-                            tty = True,
-                            command = "/bin/sh")
-# send a test command
-command_1 = "pip install -r requirements.txt"
-_, stream = box.exec_run(cmd = command_1, workdir='/scripts', stream=True)
-for data in stream:
-    print(data.decode())
-time.sleep(1)
-print("Test running")
-command_2 = "python ./runTests.py"
-_, stream = box.exec_run(cmd = command_2, workdir='/scripts', stream=True)
-for data in stream:
-    print(data.decode())
-
-print("Test done")
-
-box.stop()
-box.remove()
-time.sleep(1)
-container.stop()
-container.remove()
-time.sleep(1)
-#container_py.stop()
-#container_py.remove()
-client.networks.prune(network_name)
-print("Test Execution Successfully Completed!")
+finally:
+    box.stop()
+    time.sleep(2)
+    client.api.stop(container=container.get('Id'))
+    client.api.remove_container(container=container.get('Id'))
+    #container_py.remove()
+    #client.networks.prune(network_name)
+    print("Purge Successfully Completed!")
