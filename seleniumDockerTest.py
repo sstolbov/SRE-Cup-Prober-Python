@@ -77,7 +77,7 @@ try:
     command_2 = "python3 ./runTests.py"
     _, stream = box.exec_run(cmd = command_2, workdir='/scripts', stream=True)
     for data in stream:
-        with open("testlogs-{}.txt".format(network_name), 'w') as f:
+        with open("testlogs-{}.txt".format(network_name), 'a') as f:
             sys.stdout = f # Change the standard output to the file we created.
             print(data.decode())
             sys.stdout = original_stdout # Rese
