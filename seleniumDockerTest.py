@@ -24,6 +24,11 @@ try:
                 aliases=['selenium'],
         links={'selenium': 'selenium', 'another': None})
     })
+
+    client.api.pull("selenium/standalone-chrome")
+    client.api.pull("selenium/video:ffmpeg-4.3.1-20230404")
+    client.api.pull("python:alpine3.17")
+
     container = client.api.create_container(
         image="selenium/standalone-chrome",
         healthcheck={'test': ['CMD', 'curl', '-v', 'localhost:4444/'], 'interval': 100000000},
@@ -38,6 +43,14 @@ try:
         sleep(stop_time)
         elapsed_time += stop_time
         continue
+
+    print("Video container starts")
+    video = client.containers.run(image = "selenium/video:ffmpeg-4.3.1-20230404",
+                                remove = True,
+                                volumes={os.getcwd(): {'bind': '/videos/', 'mode': 'rw'}},
+                                detach = True,
+                                network=network_name,
+                                tty = True)
 
     print("Test container starts")
     box = client.containers.run(image = "python:alpine3.17",
@@ -70,6 +83,7 @@ try:
 
 finally:
     box.stop()
+    video.stop()
     time.sleep(2)
     client.api.stop(container=container.get('Id'))
     client.api.remove_container(container=container.get('Id'))
