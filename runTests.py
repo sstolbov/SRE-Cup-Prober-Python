@@ -30,8 +30,9 @@ time.sleep(1)
 driver.get("https://www.tinkoff.ru/solutioncup/sre/")
 time.sleep(1)
 driver.find_element(By.LINK_TEXT,"SRE").click()
-time.sleep(1)
+time.sleep(2)
 driver.find_element(By.LINK_TEXT,"backend").click()
+time.sleep(2)
 
 # driver.get("https://www.tinkoff.ru/solutioncup/sre/")
 #close the browser
