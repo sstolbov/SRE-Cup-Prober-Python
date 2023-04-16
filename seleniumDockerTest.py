@@ -49,6 +49,10 @@ try:
                                 remove = True,
                                 volumes={os.getcwd(): {'bind': '/videos/', 'mode': 'rw'}},
                                 detach = True,
+                                environment=[
+                                   "DISPLAY_CONTAINER_NAME=selenium",
+                                   "FILE_NAME=chrome_video.mp4"
+                                ],                                
                                 network=network_name,
                                 tty = True)
 
